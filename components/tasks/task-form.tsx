@@ -64,18 +64,6 @@ export function TaskForm({ onSubmit, mode, task, isLoading = false }: TaskFormPr
     },
   });
 
-  // useEffect(() => {
-  //   if (mode === 'edit' && task) {
-  //     form.setFieldValue('name', task.name);
-  //     form.setFieldValue('description', task.description || '');
-  //     form.setFieldValue('priority', (task.priority as Priority) || 'medium');
-  //     form.setFieldValue('image', task.image || '');
-  //     form.setFieldValue('due_date', task.due_date || '');
-  //   } else if (mode === 'create') {
-  //     form.reset();
-  //   }
-  // }, [mode, task]);
-
   const handleImageChange = (imageUri?: string) => {
     form.setFieldValue('image', imageUri ?? '');
   };

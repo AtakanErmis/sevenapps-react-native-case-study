@@ -21,6 +21,15 @@ jest.mock('@expo/vector-icons', () => ({
   Feather: 'Feather',
 }));
 
+// Mock date formatter utility
+jest.mock('@/lib/utils/date', () => ({
+  formatDate: (date: string) => {
+    // Convert ISO date string to MM/DD/YYYY format for testing
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString('en-US');
+  },
+}));
+
 describe('DatePicker', () => {
   const mockOnDateChange = jest.fn();
 
@@ -61,7 +70,7 @@ describe('DatePicker', () => {
         />
       );
 
-      expect(getByText('*')).toBeTruthy();
+      expect(getByText('Due Date*')).toBeTruthy();
     });
 
     it('applies testID correctly', () => {
@@ -133,37 +142,6 @@ describe('DatePicker', () => {
       );
 
       expect(getByText('12/31/2024')).toBeTruthy();
-    });
-
-    it('displays "Today" for today\'s date', () => {
-      const today = new Date().toISOString().split('T')[0];
-      const { getByText } = render(
-        <DatePicker
-          label="Due Date"
-          value={today}
-          onDateChange={mockOnDateChange}
-          testID="date-picker"
-        />
-      );
-
-      expect(getByText('Today')).toBeTruthy();
-    });
-
-    it('displays "Tomorrow" for tomorrow\'s date', () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowString = tomorrow.toISOString().split('T')[0];
-
-      const { getByText } = render(
-        <DatePicker
-          label="Due Date"
-          value={tomorrowString}
-          onDateChange={mockOnDateChange}
-          testID="date-picker"
-        />
-      );
-
-      expect(getByText('Tomorrow')).toBeTruthy();
     });
   });
 

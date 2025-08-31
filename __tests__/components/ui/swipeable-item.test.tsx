@@ -27,9 +27,20 @@ jest.mock(
   () => require('react-native-gesture-handler').Swipeable
 );
 
-// Mock react-native-reanimated with the standard mock
+// Mock react-native-reanimated with proper SharedValue implementation
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
+
+  // Override useSharedValue to return proper mock
+  Reanimated.useSharedValue = (initial: any) => ({
+    value: initial,
+    get: () => initial,
+    set: () => {},
+  });
+
+  // Override useAnimatedStyle to return empty object
+  Reanimated.useAnimatedStyle = () => ({});
+
   Reanimated.default.call = () => {};
   return Reanimated;
 });

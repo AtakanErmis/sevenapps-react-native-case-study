@@ -75,7 +75,7 @@ describe('ImagePicker', () => {
         />
       );
 
-      expect(getByText('*')).toBeTruthy();
+      expect(getByText('Task Image*')).toBeTruthy();
     });
 
     it('applies testID correctly', () => {

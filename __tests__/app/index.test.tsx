@@ -88,6 +88,43 @@ jest.mock('@/components/ui/swipeable-item', () => {
   };
 });
 
+jest.mock('@/components/ui/text-input-modal', () => {
+  const { View, Text, TextInput, TouchableOpacity } = require('react-native');
+  return {
+    TextInputModal: ({
+      visible,
+      title,
+      message,
+      placeholder,
+      defaultValue,
+      onCancel,
+      onSubmit,
+      cancelText,
+      submitText,
+    }: any) => {
+      if (!visible) return null;
+      return (
+        <View testID="text-input-modal">
+          <Text testID="modal-title">{title}</Text>
+          {message && <Text testID="modal-message">{message}</Text>}
+          <TextInput
+            testID="modal-text-input"
+            placeholder={placeholder}
+            defaultValue={defaultValue}
+            onChangeText={() => {}}
+          />
+          <TouchableOpacity testID="modal-cancel-button" onPress={onCancel}>
+            <Text>{cancelText}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity testID="modal-submit-button" onPress={() => onSubmit('Test Input')}>
+            <Text>{submitText}</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    },
+  };
+});
+
 jest.mock('expo-router', () => {
   const { View, Text } = require('react-native');
   return {
@@ -241,15 +278,7 @@ describe('Home Screen', () => {
       isPending: false,
     });
 
-    const alertSpy = jest.spyOn(Alert, 'prompt').mockImplementation((_title, _message, buttons) => {
-      // Simulate user entering text and pressing Create
-      const createButton = Array.isArray(buttons) && buttons.find((b: any) => b.text === 'Create');
-      if (createButton && createButton.onPress) {
-        createButton.onPress('New List');
-      }
-    });
-
-    const { getByText } = render(
+    const { getByText, getByTestId } = render(
       <TestWrapper>
         <Home />
       </TestWrapper>
@@ -258,10 +287,15 @@ describe('Home Screen', () => {
     // Trigger the create list action through the header button
     fireEvent.press(getByText('+ Add'));
 
-    expect(alertSpy).toHaveBeenCalled();
-    expect(mockMutate).toHaveBeenCalledWith('New List');
+    // Verify modal is shown
+    expect(getByTestId('text-input-modal')).toBeTruthy();
+    expect(getByTestId('modal-title')).toHaveTextContent('Create New List');
+    expect(getByTestId('modal-message')).toHaveTextContent('Enter the list name:');
 
-    alertSpy.mockRestore();
+    // Simulate submitting the form
+    fireEvent.press(getByTestId('modal-submit-button'));
+
+    expect(mockMutate).toHaveBeenCalledWith('Test Input');
   });
 
   it('handles navigation to list detail', () => {
@@ -324,18 +358,7 @@ describe('Home Screen', () => {
       variables: undefined,
     });
 
-    const alertSpy = jest
-      .spyOn(Alert, 'prompt')
-      .mockImplementation((_title, _message, buttons, _type, _defaultValue) => {
-        // Simulate user entering new text and pressing Rename
-        const renameButton =
-          Array.isArray(buttons) && buttons.find((b: any) => b.text === 'Rename');
-        if (renameButton && renameButton.onPress) {
-          renameButton.onPress('Updated Work Tasks');
-        }
-      });
-
-    const { getAllByTestId } = render(
+    const { getAllByTestId, getByTestId } = render(
       <TestWrapper>
         <Home />
       </TestWrapper>
@@ -347,13 +370,18 @@ describe('Home Screen', () => {
     const renameButton = within(firstSwipeableItem).getByTestId('left-action-0');
     fireEvent.press(renameButton);
 
-    expect(alertSpy).toHaveBeenCalled();
+    // Verify modal is shown with correct values
+    expect(getByTestId('text-input-modal')).toBeTruthy();
+    expect(getByTestId('modal-title')).toHaveTextContent('Rename List');
+    expect(getByTestId('modal-message')).toHaveTextContent('Enter new name:');
+
+    // Simulate submitting the form
+    fireEvent.press(getByTestId('modal-submit-button'));
+
     expect(mockRenameMutate).toHaveBeenCalledWith({
       id: 1,
-      name: 'Updated Work Tasks',
+      name: 'Test Input',
     });
-
-    alertSpy.mockRestore();
   });
 
   it('shows loading state for create button when creating', () => {
