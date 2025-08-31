@@ -47,7 +47,7 @@ describe('Input', () => {
 
   it('renders error state correctly', () => {
     const { getByTestId, getByText, getByPlaceholderText } = render(
-      <Input label="Email" placeholder="Enter email" isError error="Email is required" />
+      <Input label="Email" placeholder="Enter email" hasError error="Email is required" />
     );
 
     expect(getByText('Email')).toBeTruthy();
@@ -102,7 +102,7 @@ describe('Input', () => {
   });
 
   describe('error handling', () => {
-    it('shows error without isError flag when error text is provided', () => {
+    it('shows error without hasError flag when error text is provided', () => {
       const { getByText, getByTestId } = render(
         <Input label="Field" error="This field has an error" />
       );
@@ -111,8 +111,8 @@ describe('Input', () => {
       expect(getByTestId('error-label')).toBeTruthy();
     });
 
-    it('does not show error when isError is false and no error text', () => {
-      const { queryByTestId } = render(<Input label="Field" isError={false} />);
+    it('does not show error when hasError is false and no error text', () => {
+      const { queryByTestId } = render(<Input label="Field" hasError={false} />);
 
       expect(queryByTestId('error-label')).toBeNull();
     });

@@ -101,7 +101,7 @@ describe('Select', () => {
         value="option1"
         options={options}
         onValueChange={mockOnValueChange}
-        isError
+        hasError
         error="Selection required"
       />
     );
@@ -184,14 +184,14 @@ describe('Select', () => {
   });
 
   describe('error handling', () => {
-    it('shows error when isError is true', () => {
+    it('shows error when hasError is true', () => {
       const options = ['option1', 'option2'];
       const { getByTestId } = render(
         <Select
           value="option1"
           options={options}
           onValueChange={mockOnValueChange}
-          isError
+          hasError
           error="Error message"
         />
       );

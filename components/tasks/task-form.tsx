@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { fieldError, fieldHasError } from '@/lib/utils/field-error';
 import { Task } from '@/types';
 
 export type Priority = 'low' | 'medium' | 'high';
@@ -70,12 +71,8 @@ export function TaskForm({ onSubmit, mode, task, isLoading = false }: TaskFormPr
             onChangeText={field.handleChange}
             placeholder="Enter task name"
             autoFocus={mode === 'create'}
-            isError={!field.state.meta.isValid && field.state.meta.isTouched}
-            error={
-              !field.state.meta.isValid && field.state.meta.isTouched
-                ? field.state.meta.errors.join(', ')
-                : undefined
-            }
+            hasError={fieldHasError(field)}
+            error={fieldError(field)}
           />
         )}
       </form.Field>
@@ -88,12 +85,8 @@ export function TaskForm({ onSubmit, mode, task, isLoading = false }: TaskFormPr
             onChangeText={field.handleChange}
             placeholder="Enter task description (optional)"
             multiline
-            isError={!field.state.meta.isValid && field.state.meta.isTouched}
-            error={
-              !field.state.meta.isValid && field.state.meta.isTouched
-                ? field.state.meta.errors.join(', ')
-                : undefined
-            }
+            hasError={fieldHasError(field)}
+            error={fieldError(field)}
           />
         )}
       </form.Field>
@@ -105,12 +98,8 @@ export function TaskForm({ onSubmit, mode, task, isLoading = false }: TaskFormPr
             value={field.state.value}
             options={['low', 'medium', 'high'] as const}
             onValueChange={field.handleChange}
-            isError={!field.state.meta.isValid && field.state.meta.isTouched}
-            error={
-              !field.state.meta.isValid && field.state.meta.isTouched
-                ? field.state.meta.errors.join(', ')
-                : undefined
-            }
+            hasError={fieldHasError(field)}
+            error={fieldError(field)}
           />
         )}
       </form.Field>

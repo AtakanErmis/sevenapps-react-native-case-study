@@ -16,7 +16,7 @@ interface SelectProps<T = string> {
   options: SelectOption<T>[] | readonly T[];
   onValueChange: (value: T) => void;
   error?: string;
-  isError?: boolean;
+  hasError?: boolean;
   getOptionLabel?: (option: T) => string;
 }
 
@@ -26,7 +26,7 @@ export function Select<T = string>({
   options,
   onValueChange,
   error,
-  isError,
+  hasError: hasErrorProps,
   getOptionLabel,
 }: SelectProps<T>) {
   const id = useId();
@@ -40,6 +40,8 @@ export function Select<T = string>({
     };
   });
 
+  const hasError = hasErrorProps || !!error;
+
   return (
     <View className="mb-6">
       {label && <Label>{label}</Label>}
@@ -50,7 +52,7 @@ export function Select<T = string>({
             className={cn(
               'flex-1 rounded-lg border p-3',
               value === option.value ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50',
-              isError && 'border-red-500'
+              hasError && 'border-red-500'
             )}
             onPress={() => onValueChange(option.value)}>
             <Text
