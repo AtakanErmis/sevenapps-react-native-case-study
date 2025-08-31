@@ -1,4 +1,4 @@
-import { ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 
 import { TaskForm } from './task-form';
 
@@ -32,9 +32,13 @@ export function TaskModal({
 
   return (
     <Modal visible={visible} onClose={onClose} title={title}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-safe-or-4">
-        <TaskForm onSubmit={onSubmit} mode={mode} task={task} isLoading={isLoading} />
-      </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 128 : 0}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-safe-or-4">
+          <TaskForm onSubmit={onSubmit} mode={mode} task={task} isLoading={isLoading} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

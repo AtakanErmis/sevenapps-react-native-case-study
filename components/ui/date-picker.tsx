@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 
 import { Label } from './label';
 
@@ -38,6 +38,9 @@ export function DatePicker({
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleDateSelect = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
     if (selectedDate) {
       const dateString = selectedDate.toISOString().split('T')[0];
       onDateChange(dateString);
