@@ -16,6 +16,7 @@ import { ListCard } from '@/components/lists/list-card';
 import { ListCardSkeleton } from '@/components/lists/list-card-skeleton';
 import { Button } from '@/components/ui/button';
 import { SwipeableListItem } from '@/components/ui/swipeable-item';
+import { TextInputModal } from '@/components/ui/text-input-modal';
 import { useAllLists, useCreateList, useDeleteList, useRenameList } from '@/queries/hooks/lists';
 import { isTempId } from '@/queries/utils';
 import { List } from '@/types';
@@ -31,6 +32,11 @@ export default function Home() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Modal states
+  const [createListModalVisible, setCreateListModalVisible] = useState(false);
+  const [renameListModalVisible, setRenameListModalVisible] = useState(false);
+  const [selectedList, setSelectedList] = useState<List | null>(null);
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -41,18 +47,20 @@ export default function Home() {
   }, [queryClient]);
 
   const handleCreateList = useCallback(() => {
-    Alert.prompt('Create New List', 'Enter the list name:', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Create',
-        onPress: (text) => {
-          if (text && text.trim()) {
-            createListMutation.mutate(text.trim());
-          }
-        },
-      },
-    ]);
-  }, [createListMutation]);
+    setCreateListModalVisible(true);
+  }, []);
+
+  const handleCreateListSubmit = useCallback(
+    (text: string) => {
+      createListMutation.mutate(text);
+      setCreateListModalVisible(false);
+    },
+    [createListMutation]
+  );
+
+  const handleCreateListCancel = useCallback(() => {
+    setCreateListModalVisible(false);
+  }, []);
 
   const handleDeleteList = (list: List) => {
     Alert.alert('Delete List', `Are you sure you want to delete "${list.name}"?`, [
@@ -66,24 +74,25 @@ export default function Home() {
   };
 
   const handleRenameList = (list: List) => {
-    Alert.prompt(
-      'Rename List',
-      'Enter new name:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Rename',
-          onPress: (text) => {
-            if (text && text.trim() && text.trim() !== list.name) {
-              renameListMutation.mutate({ id: list.id, name: text.trim() });
-            }
-          },
-        },
-      ],
-      'plain-text',
-      list.name
-    );
+    setSelectedList(list);
+    setRenameListModalVisible(true);
   };
+
+  const handleRenameListSubmit = useCallback(
+    (text: string) => {
+      if (selectedList && text !== selectedList.name) {
+        renameListMutation.mutate({ id: selectedList.id, name: text });
+      }
+      setRenameListModalVisible(false);
+      setSelectedList(null);
+    },
+    [selectedList, renameListMutation]
+  );
+
+  const handleRenameListCancel = useCallback(() => {
+    setRenameListModalVisible(false);
+    setSelectedList(null);
+  }, []);
 
   const handleListPress = (list: List) => {
     router.push(`/tasks/${list.id}`);
@@ -206,6 +215,29 @@ export default function Home() {
           />
         )}
       </View>
+
+      <TextInputModal
+        visible={createListModalVisible}
+        title="Create New List"
+        message="Enter the list name:"
+        placeholder="List name"
+        onCancel={handleCreateListCancel}
+        onSubmit={handleCreateListSubmit}
+        cancelText="Cancel"
+        submitText="Create"
+      />
+
+      <TextInputModal
+        visible={renameListModalVisible}
+        title="Rename List"
+        message="Enter new name:"
+        placeholder="List name"
+        defaultValue={selectedList?.name || ''}
+        onCancel={handleRenameListCancel}
+        onSubmit={handleRenameListSubmit}
+        cancelText="Cancel"
+        submitText="Rename"
+      />
     </View>
   );
 }
