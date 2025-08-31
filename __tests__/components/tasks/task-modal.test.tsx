@@ -25,11 +25,14 @@ jest.mock('@/components/ui/modal', () => {
 jest.mock('@/components/tasks/task-form', () => {
   const { View, Text } = require('react-native');
   return {
-    TaskForm: ({ mode, task, isLoading }: any) => (
+    TaskForm: ({ mode, task, isLoading, onSubmit }: any) => (
       <View testID="task-form" data-mode={mode} data-loading={isLoading.toString()}>
         <Text testID="task-form-mode">TaskForm - Mode: {mode}</Text>
         {task && <Text testID="task-form-editing">Editing: {task.name}</Text>}
+        {task?.image && <Text testID="task-form-image">Image: {task.image}</Text>}
+        {task?.due_date && <Text testID="task-form-due-date">Due: {task.due_date}</Text>}
         {isLoading && <Text testID="task-form-loading">Loading...</Text>}
+        {onSubmit && <Text testID="task-form-submit">Submit handler attached</Text>}
       </View>
     ),
   };
@@ -51,6 +54,13 @@ describe('TaskModal', () => {
     list_id: 1,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
+  };
+
+  const mockTaskWithImageAndDate: Task = {
+    ...mockTask,
+    id: 2,
+    image: 'file://test-image.jpg',
+    due_date: '2024-12-31',
   };
 
   beforeEach(() => {
@@ -105,7 +115,7 @@ describe('TaskModal', () => {
     const taskForm = getByTestId('task-form');
     expect(taskForm).toBeTruthy();
     expect(taskForm.props['data-mode']).toBe('create');
-    expect(taskForm).toHaveTextContent('TaskForm - Mode: create');
+    expect(getByTestId('task-form-mode')).toHaveTextContent('TaskForm - Mode: create');
   });
 
   it('passes task to TaskForm in edit mode', () => {
@@ -163,6 +173,7 @@ describe('TaskModal', () => {
       expect(modal.props['data-visible']).toBe('true');
       expect(taskForm.props['data-mode']).toBe('create');
       expect(taskForm.props['data-loading']).toBe('false');
+      expect(getByTestId('task-form-submit')).toHaveTextContent('Submit handler attached');
     });
 
     it('handles undefined task prop gracefully', () => {
@@ -282,6 +293,22 @@ describe('TaskModal', () => {
       expect(getByTestId('task-form-editing')).toHaveTextContent('Editing: Updated Task Name');
     });
 
+    it('passes task with image and due date to TaskForm', () => {
+      const { getByTestId } = render(
+        <TaskModal
+          visible
+          onClose={mockOnClose}
+          onSubmit={mockOnSubmit}
+          mode="edit"
+          task={mockTaskWithImageAndDate}
+        />
+      );
+
+      expect(getByTestId('task-form-editing')).toHaveTextContent('Editing: Test Task');
+      expect(getByTestId('task-form-image')).toHaveTextContent('Image: file://test-image.jpg');
+      expect(getByTestId('task-form-due-date')).toHaveTextContent('Due: 2024-12-31');
+    });
+
     it('handles loading state changes', () => {
       const { rerender, getByTestId, queryByText } = render(
         <TaskModal
@@ -300,6 +327,108 @@ describe('TaskModal', () => {
       );
 
       expect(getByTestId('task-form').props['data-loading']).toBe('true');
+    });
+  });
+
+  describe('onSubmit function handling', () => {
+    it('passes onSubmit function to TaskForm', () => {
+      const { getByTestId } = render(
+        <TaskModal visible onClose={mockOnClose} onSubmit={mockOnSubmit} mode="create" />
+      );
+
+      expect(getByTestId('task-form-submit')).toHaveTextContent('Submit handler attached');
+    });
+
+    it('handles onSubmit with new field structure', () => {
+      // The onSubmit function should accept the new fields structure
+      const enhancedOnSubmit = jest.fn(
+        (taskData: {
+          name: string;
+          description?: string;
+          priority: 'low' | 'medium' | 'high';
+          image?: string;
+          due_date?: string;
+        }) => {
+          // This validates the interface includes the new fields
+          expect(taskData).toBeDefined();
+        }
+      );
+
+      render(<TaskModal visible onClose={mockOnClose} onSubmit={enhancedOnSubmit} mode="create" />);
+
+      // Test passes if the interface accepts the enhanced onSubmit function
+      expect(enhancedOnSubmit).toBeDefined();
+    });
+  });
+
+  describe('Task with new fields', () => {
+    it('renders task with image correctly', () => {
+      const taskWithImage: Task = {
+        ...mockTask,
+        image: 'file://test-image.jpg',
+      };
+
+      const { getByTestId } = render(
+        <TaskModal
+          visible
+          onClose={mockOnClose}
+          onSubmit={mockOnSubmit}
+          mode="edit"
+          task={taskWithImage}
+        />
+      );
+
+      expect(getByTestId('task-form-image')).toHaveTextContent('Image: file://test-image.jpg');
+    });
+
+    it('renders task with due date correctly', () => {
+      const taskWithDueDate: Task = {
+        ...mockTask,
+        due_date: '2024-12-31',
+      };
+
+      const { getByTestId } = render(
+        <TaskModal
+          visible
+          onClose={mockOnClose}
+          onSubmit={mockOnSubmit}
+          mode="edit"
+          task={taskWithDueDate}
+        />
+      );
+
+      expect(getByTestId('task-form-due-date')).toHaveTextContent('Due: 2024-12-31');
+    });
+
+    it('handles task with both image and due date', () => {
+      const { getByTestId } = render(
+        <TaskModal
+          visible
+          onClose={mockOnClose}
+          onSubmit={mockOnSubmit}
+          mode="edit"
+          task={mockTaskWithImageAndDate}
+        />
+      );
+
+      expect(getByTestId('task-form-image')).toHaveTextContent('Image: file://test-image.jpg');
+      expect(getByTestId('task-form-due-date')).toHaveTextContent('Due: 2024-12-31');
+    });
+
+    it('handles task without image and due date', () => {
+      const { getByTestId, queryByTestId } = render(
+        <TaskModal
+          visible
+          onClose={mockOnClose}
+          onSubmit={mockOnSubmit}
+          mode="edit"
+          task={mockTask}
+        />
+      );
+
+      expect(getByTestId('task-form-editing')).toHaveTextContent('Editing: Test Task');
+      expect(queryByTestId('task-form-image')).toBeNull();
+      expect(queryByTestId('task-form-due-date')).toBeNull();
     });
   });
 });

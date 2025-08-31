@@ -78,6 +78,35 @@ const mockTasks: Task[] = [
   },
 ];
 
+const mockTasksWithImageAndDate: Task[] = [
+  {
+    id: 3,
+    name: 'Task with Image',
+    description: 'Has image attachment',
+    image: 'file://test-image.jpg',
+    status: 'pending',
+    priority: 'high',
+    is_completed: false,
+    due_date: '2024-12-31',
+    list_id: 1,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 4,
+    name: 'Task Due Tomorrow',
+    description: 'Due date soon',
+    image: null,
+    status: 'pending',
+    priority: 'medium',
+    is_completed: false,
+    due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    list_id: 1,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+];
+
 jest.mock('@/queries/hooks/lists', () => ({
   useListById: () => ({ data: mockList }),
 }));
@@ -146,10 +175,20 @@ jest.mock('@/components/tasks/task-modal', () => {
         </TouchableOpacity>
         <TouchableOpacity
           testID="modal-submit"
-          onPress={() => onSubmit({ name: 'New Task', priority: 'medium' })}>
+          onPress={() =>
+            onSubmit({
+              name: 'New Task',
+              priority: 'medium',
+              description: 'Test description',
+              image: task?.image || undefined,
+              due_date: task?.due_date || undefined,
+            })
+          }>
           <Text>Submit</Text>
         </TouchableOpacity>
         {task && <Text testID="modal-task">{task.name}</Text>}
+        {task?.image && <Text testID="modal-image">Image: {task.image}</Text>}
+        {task?.due_date && <Text testID="modal-due-date">Due: {task.due_date}</Text>}
       </View>
     ),
   };
@@ -266,6 +305,9 @@ describe('TasksScreen', () => {
       expect(mockMutations.createTask.mutate).toHaveBeenCalledWith({
         name: 'New Task',
         priority: 'medium',
+        description: 'Test description',
+        image: undefined,
+        due_date: undefined,
         list_id: 1,
       });
     });
@@ -493,9 +535,185 @@ describe('TasksScreen', () => {
       await waitFor(() => {
         expect(mockMutations.updateTask.mutate).toHaveBeenCalledWith({
           id: 1,
-          updates: { name: 'New Task', priority: 'medium' },
+          updates: {
+            name: 'New Task',
+            priority: 'medium',
+            description: 'Test description',
+            image: undefined,
+            due_date: undefined,
+          },
         });
       });
+    });
+  });
+
+  describe('Tasks with new fields', () => {
+    beforeEach(() => {
+      // Reset mutations for these tests
+      mockMutations.createTask.mutate = jest.fn();
+      mockMutations.updateTask.mutate = jest.fn();
+    });
+
+    it('handles tasks with image and due date', () => {
+      mockUseTasksByListId.mockReturnValue({
+        data: mockTasksWithImageAndDate,
+        isLoading: false,
+        error: null,
+      });
+
+      const { getByTestId, getByText } = render(<TasksScreen />);
+
+      expect(getByTestId('task-3')).toBeTruthy();
+      expect(getByTestId('task-4')).toBeTruthy();
+      expect(getByText('Task with Image')).toBeTruthy();
+      expect(getByText('Task Due Tomorrow')).toBeTruthy();
+    });
+
+    it('passes image and due date to edit modal', () => {
+      mockUseTasksByListId.mockReturnValue({
+        data: mockTasksWithImageAndDate,
+        isLoading: false,
+        error: null,
+      });
+
+      const { getByTestId, getAllByTestId } = render(<TasksScreen />);
+
+      // Open edit modal for task with image
+      const editButtons = getAllByTestId('left-action-0');
+      fireEvent.press(editButtons[0]); // First task with image
+
+      const modal = getByTestId('task-modal');
+      expect(modal.props['data-visible']).toBe('true');
+      expect(modal.props['data-mode']).toBe('edit');
+      expect(getByTestId('modal-task')).toHaveTextContent('Task with Image');
+      expect(getByTestId('modal-image')).toHaveTextContent('Image: file://test-image.jpg');
+      expect(getByTestId('modal-due-date')).toHaveTextContent('Due: 2024-12-31');
+    });
+
+    it('handles task creation with new fields', async () => {
+      const { getByTestId } = render(<TasksScreen />);
+
+      fireEvent.press(getByTestId('add-task-button'));
+      fireEvent.press(getByTestId('modal-submit'));
+
+      await waitFor(() => {
+        expect(mockMutations.createTask.mutate).toHaveBeenCalledWith({
+          name: 'New Task',
+          priority: 'medium',
+          description: 'Test description',
+          image: undefined,
+          due_date: undefined,
+          list_id: 1,
+        });
+      });
+    });
+
+    it('handles task update with new fields', async () => {
+      mockUseTasksByListId.mockReturnValue({
+        data: mockTasksWithImageAndDate,
+        isLoading: false,
+        error: null,
+      });
+
+      const { getByTestId, getAllByTestId } = render(<TasksScreen />);
+
+      // Open edit modal for task with image and due date
+      const editButtons = getAllByTestId('left-action-0');
+      fireEvent.press(editButtons[0]); // Task with image
+
+      // Submit edit
+      fireEvent.press(getByTestId('modal-submit'));
+
+      await waitFor(() => {
+        expect(mockMutations.updateTask.mutate).toHaveBeenCalledWith({
+          id: 3,
+          updates: {
+            name: 'New Task',
+            priority: 'medium',
+            description: 'Test description',
+            image: 'file://test-image.jpg',
+            due_date: '2024-12-31',
+          },
+        });
+      });
+    });
+
+    it('handles optimistic task with new fields', () => {
+      const tempTaskWithFields: Task = {
+        id: 'temp-456' as any,
+        name: 'Optimistic Task with Fields',
+        description: 'Has all fields',
+        image: 'file://temp-image.jpg',
+        status: 'pending',
+        priority: 'low',
+        is_completed: false,
+        due_date: '2024-12-25',
+        list_id: 1,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
+
+      mockUseTasksByListId.mockReturnValue({
+        data: [...mockTasks, tempTaskWithFields],
+        isLoading: false,
+        error: null,
+      });
+
+      const { getByText, getByTestId } = render(<TasksScreen />);
+
+      expect(getByText('Optimistic Task with Fields')).toBeTruthy();
+
+      // Optimistic tasks should be disabled
+      const optimisticTask = getByTestId('task-temp-456');
+      expect(optimisticTask.props['data-disabled']).toBe('true');
+    });
+  });
+
+  describe('Backward compatibility', () => {
+    it('handles tasks without image or due_date fields', () => {
+      const tasksWithoutNewFields: Task[] = [
+        {
+          id: 5,
+          name: 'Legacy Task',
+          description: 'No new fields',
+          image: null,
+          status: 'pending',
+          priority: 'medium',
+          is_completed: false,
+          due_date: null,
+          list_id: 1,
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ];
+
+      mockUseTasksByListId.mockReturnValue({
+        data: tasksWithoutNewFields,
+        isLoading: false,
+        error: null,
+      });
+
+      const { getByText } = render(<TasksScreen />);
+
+      expect(getByText('Legacy Task')).toBeTruthy();
+    });
+
+    it('handles mixed tasks (some with new fields, some without)', () => {
+      const mixedTasks: Task[] = [...mockTasks, ...mockTasksWithImageAndDate];
+
+      mockUseTasksByListId.mockReturnValue({
+        data: mixedTasks,
+        isLoading: false,
+        error: null,
+      });
+
+      const { getByText } = render(<TasksScreen />);
+
+      // All tasks should render correctly
+      expect(getByText('Test Task 1')).toBeTruthy();
+      expect(getByText('Test Task 2')).toBeTruthy();
+      expect(getByText('Task with Image')).toBeTruthy();
+      expect(getByText('Task Due Tomorrow')).toBeTruthy();
     });
   });
 });

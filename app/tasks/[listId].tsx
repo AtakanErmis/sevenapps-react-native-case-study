@@ -62,7 +62,13 @@ export default function TasksScreen() {
   }, [queryClient, listId]);
 
   const handleTaskSubmit = useCallback(
-    (taskData: { name: string; description?: string; priority: 'low' | 'medium' | 'high' }) => {
+    (taskData: {
+      name: string;
+      description?: string;
+      priority: 'low' | 'medium' | 'high';
+      image?: string;
+      due_date?: string;
+    }) => {
       if (modalMode === 'create') {
         createTaskMutation.mutate({
           ...taskData,

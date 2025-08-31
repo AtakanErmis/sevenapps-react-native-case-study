@@ -1,3 +1,5 @@
+import { ScrollView } from 'react-native';
+
 import { TaskForm } from './task-form';
 
 import { Modal } from '@/components/ui/modal';
@@ -10,6 +12,8 @@ interface TaskModalProps {
     name: string;
     description?: string;
     priority: 'low' | 'medium' | 'high';
+    image?: string;
+    due_date?: string;
   }) => void;
   mode: 'create' | 'edit';
   task?: Task;
@@ -28,7 +32,9 @@ export function TaskModal({
 
   return (
     <Modal visible={visible} onClose={onClose} title={title}>
-      <TaskForm onSubmit={onSubmit} mode={mode} task={task} isLoading={isLoading} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-safe-or-4">
+        <TaskForm onSubmit={onSubmit} mode={mode} task={task} isLoading={isLoading} />
+      </ScrollView>
     </Modal>
   );
 }

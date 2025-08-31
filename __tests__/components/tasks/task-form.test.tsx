@@ -49,6 +49,54 @@ jest.mock('@/components/ui/select', () => {
   };
 });
 
+// Mock DatePicker component
+jest.mock('@/components/ui/date-picker', () => {
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return {
+    DatePicker: ({ label, value, onDateChange, placeholder, hasError, error, testID }: any) => (
+      <View testID={testID}>
+        <Text>{label}</Text>
+        <TouchableOpacity testID={`${testID}-button`} onPress={() => onDateChange('2024-12-31')}>
+          <Text>{value || placeholder}</Text>
+        </TouchableOpacity>
+        {hasError && error && <Text testID={`${testID}-error`}>{error}</Text>}
+        {value && (
+          <TouchableOpacity testID={`${testID}-clear`} onPress={() => onDateChange(undefined)}>
+            <Text>Clear date</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    ),
+  };
+});
+
+// Mock ImagePicker component
+jest.mock('@/components/ui/image-picker', () => {
+  const { View, Text, TouchableOpacity, Image } = require('react-native');
+  return {
+    ImagePicker: ({ label, value, onImageChange, hasError, error, testID }: any) => (
+      <View testID={testID}>
+        <Text>{label}</Text>
+        {value ? (
+          <View>
+            <Image testID={`${testID}-image`} source={{ uri: value }} />
+            <TouchableOpacity testID={`${testID}-remove`} onPress={() => onImageChange(undefined)}>
+              <Text>Remove</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            testID={`${testID}-placeholder`}
+            onPress={() => onImageChange('file://test-image.jpg')}>
+            <Text>Add Image</Text>
+          </TouchableOpacity>
+        )}
+        {hasError && error && <Text testID={`${testID}-error`}>{error}</Text>}
+      </View>
+    ),
+  };
+});
+
 // Simple mock for react-form
 jest.mock('@tanstack/react-form', () => ({
   useForm: ({ defaultValues }: any) => ({
@@ -97,12 +145,20 @@ describe('TaskForm', () => {
   });
 
   it('renders form fields correctly', () => {
-    const { getByTestId } = render(<TaskForm onSubmit={mockOnSubmit} mode="create" />);
+    const { getByTestId, getByText } = render(<TaskForm onSubmit={mockOnSubmit} mode="create" />);
 
     expect(getByTestId('input-task-name')).toBeTruthy();
     expect(getByTestId('input-description')).toBeTruthy();
     expect(getByTestId('select-priority')).toBeTruthy();
     expect(getByTestId('submit-button')).toBeTruthy();
+
+    // Check for new component fields
+    expect(getByTestId('task-image-picker')).toBeTruthy();
+    expect(getByTestId('task-date-picker')).toBeTruthy();
+    expect(getByText('Image')).toBeTruthy();
+    expect(getByText('Due Date')).toBeTruthy();
+    expect(getByText('Add Image')).toBeTruthy();
+    expect(getByText('Select due date (optional)')).toBeTruthy();
   });
 
   it('shows correct button text for create mode', () => {

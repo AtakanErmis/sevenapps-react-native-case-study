@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import Swipeable, { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, { SharedValue, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
 import { cn } from '@/lib/utils/cn';
 
@@ -26,27 +26,33 @@ export const Actions = ({
   direction,
   progress,
   drag,
+  onActionPress,
 }: {
   actions: SwipeAction[];
   direction: 'left' | 'right';
   progress: SharedValue<number>;
   drag: SharedValue<number>;
+  onActionPress?: () => void;
 }) => {
-  const [viewLength, setViewLength] = useState(0);
+  const viewLength = useSharedValue(0);
 
   const styleAnimation = useAnimatedStyle(() => {
+    const length = viewLength.get();
+    const dragValue = drag.get();
     return {
       transform: [
         {
-          translateX: direction === 'right' ? drag.value + viewLength : drag.value - viewLength,
+          translateX: direction === 'right' ? dragValue + length : dragValue - length,
         },
       ],
     };
-  });
+  }, [drag, viewLength]);
 
   return (
     <Reanimated.View
-      onLayout={(e) => setViewLength(e.nativeEvent.layout.width)}
+      onLayout={(e) => {
+        viewLength.set(e.nativeEvent.layout.width);
+      }}
       className={styles.actionsContainer}
       style={styleAnimation}>
       {actions.map((action, index) => {
@@ -54,7 +60,10 @@ export const Actions = ({
           <TouchableOpacity
             key={index}
             className={cn([styles.actionButton, action.buttonClassName])}
-            onPress={action.onPress}>
+            onPress={() => {
+              action.onPress();
+              onActionPress?.();
+            }}>
             {action.icon}
             <Text className={cn('text-center', action.textClassName)}>{action.text}</Text>
           </TouchableOpacity>
@@ -70,10 +79,17 @@ export const SwipeableListItem: React.FC<SwipeableListItemProps> = ({
   rightActions = [],
   onSwipeStateChange,
 }) => {
+  const swipeableRef = useRef<SwipeableMethods>(null);
+
+  const closeSwipeable = () => {
+    swipeableRef.current?.close();
+  };
+
   return (
     <GestureHandlerRootView>
       <View className={styles.container}>
         <Swipeable
+          ref={swipeableRef}
           friction={2}
           enableTrackpadTwoFingerGesture
           renderRightActions={
@@ -84,6 +100,7 @@ export const SwipeableListItem: React.FC<SwipeableListItemProps> = ({
                     direction="right"
                     progress={progressAnimatedValue}
                     drag={dragAnimatedValue}
+                    onActionPress={closeSwipeable}
                   />
                 )
               : undefined
@@ -96,6 +113,7 @@ export const SwipeableListItem: React.FC<SwipeableListItemProps> = ({
                     direction="left"
                     progress={progressAnimatedValue}
                     drag={dragAnimatedValue}
+                    onActionPress={closeSwipeable}
                   />
                 )
               : undefined
