@@ -3,7 +3,7 @@ import { Text } from 'react-native';
 import { cn } from '@/lib/utils/cn';
 
 interface LabelProps {
-  children: string;
+  children?: string;
   required?: boolean;
   className?: string;
   variant?: 'default' | 'error';
@@ -18,7 +18,7 @@ export function Label({ children, required, className, variant = 'default' }: La
 
   return (
     <Text className={cn(baseStyles, variantStyles[variant], className)}>
-      {children}
+      {children || ''}
       {required && variant === 'default' && '*'}
     </Text>
   );

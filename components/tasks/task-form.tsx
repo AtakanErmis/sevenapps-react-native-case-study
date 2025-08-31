@@ -27,9 +27,10 @@ interface TaskFormProps {
   }) => void;
   mode: 'create' | 'edit';
   task?: Task;
+  isLoading?: boolean;
 }
 
-export function TaskForm({ onSubmit, mode, task }: TaskFormProps) {
+export function TaskForm({ onSubmit, mode, task, isLoading = false }: TaskFormProps) {
   const form = useForm({
     defaultValues: {
       name: '',
@@ -37,13 +38,7 @@ export function TaskForm({ onSubmit, mode, task }: TaskFormProps) {
       priority: 'medium' as Priority,
     },
     validators: {
-      onChange: ({ value }) => {
-        const result = taskSchema.safeParse(value);
-        if (!result.success) {
-          return result.error.format();
-        }
-        return undefined;
-      },
+      onChange: taskSchema,
     },
     onSubmit: async ({ value }) => {
       onSubmit({
@@ -125,7 +120,7 @@ export function TaskForm({ onSubmit, mode, task }: TaskFormProps) {
           <Button
             className={canSubmit ? 'bg-green-500' : 'bg-gray-300'}
             onPress={form.handleSubmit}
-            disabled={!canSubmit || isSubmitting}>
+            disabled={!canSubmit || isSubmitting || isLoading}>
             <Text className="text-center text-lg font-semibold text-white">
               {mode === 'create' ? 'Create Task' : 'Save Changes'}
             </Text>

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 
 import { Label } from './label';
@@ -28,6 +29,7 @@ export function Select<T = string>({
   isError,
   getOptionLabel,
 }: SelectProps<T>) {
+  const id = useId();
   const normalizedOptions = options.map((option) => {
     if (typeof option === 'object' && option !== null && 'value' in option && 'label' in option) {
       return option as SelectOption<T>;
@@ -42,9 +44,9 @@ export function Select<T = string>({
     <View className="mb-6">
       {label && <Label>{label}</Label>}
       <View className="flex-row gap-3">
-        {normalizedOptions.map((option) => (
+        {normalizedOptions.map((option, index) => (
           <TouchableOpacity
-            key={String(option.value)}
+            key={`${id}-${index}`}
             className={cn(
               'flex-1 rounded-lg border p-3',
               value === option.value ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50',

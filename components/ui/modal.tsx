@@ -19,15 +19,23 @@ export function Modal({
   animationType = 'slide',
 }: ModalProps) {
   return (
-    <RNModal visible={visible} animationType={animationType} presentationStyle={presentationStyle}>
+    <RNModal
+      visible={visible}
+      animationType={animationType}
+      presentationStyle={presentationStyle}
+      testID="modal">
       <View className="flex-1 bg-white p-4">
         <View className="mb-6 flex-row items-center justify-between">
-          <Text className="text-xl font-bold">{title}</Text>
-          <TouchableOpacity onPress={onClose}>
+          <Text className="text-xl font-bold" testID="modal-title">
+            {title}
+          </Text>
+          <TouchableOpacity onPress={onClose} testID="modal-close">
             <Text className="font-medium text-blue-500">Cancel</Text>
           </TouchableOpacity>
         </View>
-        {children}
+        <View className="flex-1" testID="modal-content">
+          {children}
+        </View>
       </View>
     </RNModal>
   );
