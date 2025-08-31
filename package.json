@@ -69,7 +69,17 @@
   },
   "eslintConfig": {
     "extends": "universe/native",
-    "root": true
+    "root": true,
+    "ignorePatterns": [
+      ".expo",
+      "node_modules",
+      "app.json",
+      "android",
+      "ios",
+      "drizzle",
+      "coverage",
+      "expo-env.d.ts"
+    ]
   },
   "private": true
 }
