@@ -251,16 +251,24 @@ jest.mock('@/components/tasks/filter-controls', () => {
 jest.mock('@/components/tasks/filters-panel', () => {
   const { View, Text } = require('react-native');
   return {
-    FiltersPanel: ({ showFilters }: any) => 
-      showFilters ? <View testID="filters-panel"><Text>Filter Options</Text></View> : null,
+    FiltersPanel: ({ showFilters }: any) =>
+      showFilters ? (
+        <View testID="filters-panel">
+          <Text>Filter Options</Text>
+        </View>
+      ) : null,
   };
 });
 
 jest.mock('@/components/tasks/sort-panel', () => {
   const { View, Text } = require('react-native');
   return {
-    SortPanel: ({ showSort }: any) => 
-      showSort ? <View testID="sort-panel"><Text>Sort Options</Text></View> : null,
+    SortPanel: ({ showSort }: any) =>
+      showSort ? (
+        <View testID="sort-panel">
+          <Text>Sort Options</Text>
+        </View>
+      ) : null,
   };
 });
 

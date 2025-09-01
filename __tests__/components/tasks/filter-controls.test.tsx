@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
+import React from 'react';
 
 import { FilterControls } from '@/components/tasks/filter-controls';
 

@@ -52,7 +52,7 @@ describe('filterLists', () => {
   it('should filter lists by partial name match', () => {
     const result = filterLists(mockLists, 'pro');
     expect(result).toHaveLength(2);
-    expect(result.map(list => list.name)).toEqual(['Personal Projects', 'Home Improvement']);
+    expect(result.map((list) => list.name)).toEqual(['Personal Projects', 'Home Improvement']);
   });
 
   it('should handle uppercase search terms', () => {
@@ -136,6 +136,6 @@ describe('filterLists', () => {
     ];
     const result = filterLists(listsWithSimilarNames, 'project');
     expect(result).toHaveLength(2);
-    expect(result.map(list => list.name)).toEqual(['Project Alpha', 'Project Beta']);
+    expect(result.map((list) => list.name)).toEqual(['Project Alpha', 'Project Beta']);
   });
 });

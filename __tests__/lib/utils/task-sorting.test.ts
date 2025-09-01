@@ -60,31 +60,31 @@ describe('sortTasks', () => {
   describe('completion status priority', () => {
     it('should always put incomplete tasks before completed tasks regardless of other sorting', () => {
       const result = sortTasks(mockTasks, 'name', 'asc');
-      const incompleteCount = result.filter(t => !t.is_completed).length;
+      const incompleteCount = result.filter((t) => !t.is_completed).length;
       const completedTasks = result.slice(incompleteCount);
       const incompleteTasks = result.slice(0, incompleteCount);
-      
-      incompleteTasks.forEach(task => expect(task.is_completed).toBe(false));
-      completedTasks.forEach(task => expect(task.is_completed).toBe(true));
+
+      incompleteTasks.forEach((task) => expect(task.is_completed).toBe(false));
+      completedTasks.forEach((task) => expect(task.is_completed).toBe(true));
     });
   });
 
   describe('name sorting', () => {
     it('should sort by name ascending', () => {
       const result = sortTasks(mockTasks, 'name', 'asc');
-      const incompleteNames = result.filter(t => !t.is_completed).map(t => t.name);
+      const incompleteNames = result.filter((t) => !t.is_completed).map((t) => t.name);
       expect(incompleteNames).toEqual(['Buy groceries', 'Exercise']);
     });
 
     it('should sort by name descending', () => {
       const result = sortTasks(mockTasks, 'name', 'desc');
-      const incompleteNames = result.filter(t => !t.is_completed).map(t => t.name);
+      const incompleteNames = result.filter((t) => !t.is_completed).map((t) => t.name);
       expect(incompleteNames).toEqual(['Exercise', 'Buy groceries']);
     });
 
     it('should sort completed tasks by name too', () => {
       const result = sortTasks(mockTasks, 'name', 'asc');
-      const completedNames = result.filter(t => t.is_completed).map(t => t.name);
+      const completedNames = result.filter((t) => t.is_completed).map((t) => t.name);
       expect(completedNames).toEqual(['Another completed task', 'Write code']);
     });
   });
@@ -92,13 +92,13 @@ describe('sortTasks', () => {
   describe('created_at sorting', () => {
     it('should sort by created_at ascending', () => {
       const result = sortTasks(mockTasks, 'created_at', 'asc');
-      const incompleteDates = result.filter(t => !t.is_completed).map(t => t.created_at);
+      const incompleteDates = result.filter((t) => !t.is_completed).map((t) => t.created_at);
       expect(incompleteDates).toEqual(['2023-01-01T00:00:00Z', '2023-01-03T00:00:00Z']);
     });
 
     it('should sort by created_at descending', () => {
       const result = sortTasks(mockTasks, 'created_at', 'desc');
-      const incompleteDates = result.filter(t => !t.is_completed).map(t => t.created_at);
+      const incompleteDates = result.filter((t) => !t.is_completed).map((t) => t.created_at);
       expect(incompleteDates).toEqual(['2023-01-03T00:00:00Z', '2023-01-01T00:00:00Z']);
     });
   });
@@ -106,20 +106,20 @@ describe('sortTasks', () => {
   describe('due_date sorting', () => {
     it('should sort by due_date ascending with null dates at end', () => {
       const result = sortTasks(mockTasks, 'due_date', 'asc');
-      const incompleteTasks = result.filter(t => !t.is_completed);
+      const incompleteTasks = result.filter((t) => !t.is_completed);
       expect(incompleteTasks[0].due_date).toBe('2023-01-05T00:00:00Z');
       expect(incompleteTasks[1].due_date).toBe(null);
     });
 
     it('should sort by due_date descending with null dates at end', () => {
       const result = sortTasks(mockTasks, 'due_date', 'desc');
-      const incompleteTasks = result.filter(t => !t.is_completed);
+      const incompleteTasks = result.filter((t) => !t.is_completed);
       expect(incompleteTasks[0].due_date).toBe('2023-01-05T00:00:00Z');
       expect(incompleteTasks[1].due_date).toBe(null);
     });
 
     it('should handle all null due dates', () => {
-      const tasksWithNullDates = mockTasks.map(task => ({ ...task, due_date: null }));
+      const tasksWithNullDates = mockTasks.map((task) => ({ ...task, due_date: null }));
       const result = sortTasks(tasksWithNullDates, 'due_date', 'asc');
       expect(result).toHaveLength(4);
     });
@@ -140,13 +140,13 @@ describe('sortTasks', () => {
   describe('priority sorting', () => {
     it('should sort by priority ascending (low to high)', () => {
       const result = sortTasks(mockTasks, 'priority', 'asc');
-      const incompletePriorities = result.filter(t => !t.is_completed).map(t => t.priority);
+      const incompletePriorities = result.filter((t) => !t.is_completed).map((t) => t.priority);
       expect(incompletePriorities).toEqual(['low', 'high']);
     });
 
     it('should sort by priority descending (high to low)', () => {
       const result = sortTasks(mockTasks, 'priority', 'desc');
-      const incompletePriorities = result.filter(t => !t.is_completed).map(t => t.priority);
+      const incompletePriorities = result.filter((t) => !t.is_completed).map((t) => t.priority);
       expect(incompletePriorities).toEqual(['high', 'low']);
     });
 
@@ -157,7 +157,7 @@ describe('sortTasks', () => {
         { ...mockTasks[2], priority: 'low', is_completed: false },
       ];
       const result = sortTasks(allPriorityTasks, 'priority', 'desc');
-      const priorities = result.map(t => t.priority);
+      const priorities = result.map((t) => t.priority);
       expect(priorities).toEqual(['high', 'medium', 'low']);
     });
 
@@ -198,7 +198,7 @@ describe('sortTasks', () => {
       ];
       const result = sortTasks(sameTasks, 'name', 'asc');
       expect(result).toHaveLength(2);
-      result.forEach(task => expect(task.name).toBe('Same Name'));
+      result.forEach((task) => expect(task.name).toBe('Same Name'));
     });
   });
 });

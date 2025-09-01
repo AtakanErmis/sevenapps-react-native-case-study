@@ -94,9 +94,7 @@ describe('filterTasks', () => {
     });
 
     it('should handle tasks without description', () => {
-      const tasksWithoutDesc = [
-        { ...mockTasks[0], description: null },
-      ];
+      const tasksWithoutDesc = [{ ...mockTasks[0], description: null }];
       const result = filterTasks(tasksWithoutDesc, {
         searchTerm: 'buy',
         priorityFilter: null,
@@ -165,7 +163,7 @@ describe('filterTasks', () => {
         statusFilter: 'incomplete',
       });
       expect(result).toHaveLength(2);
-      result.forEach(task => expect(task.is_completed).toBe(false));
+      result.forEach((task) => expect(task.is_completed).toBe(false));
     });
 
     it('should filter by specific status', () => {

@@ -1,5 +1,4 @@
 import { render, fireEvent } from '@testing-library/react-native';
-import React from 'react';
 
 import { Input } from '@/components/ui/input';
 
@@ -121,14 +120,14 @@ describe('Input', () => {
   describe('size variants', () => {
     it('renders default variant correctly', () => {
       const { getByPlaceholderText } = render(<Input placeholder="Default input" />);
-      
+
       const input = getByPlaceholderText('Default input');
       expect(input.props.className).toContain('h-12 text-lg');
     });
 
     it('renders small variant correctly', () => {
       const { getByPlaceholderText } = render(<Input placeholder="Small input" variant="small" />);
-      
+
       const input = getByPlaceholderText('Small input');
       expect(input.props.className).toContain('text-md h-10');
     });
@@ -136,30 +135,29 @@ describe('Input', () => {
 
   describe('left and right components', () => {
     it('renders left component correctly', () => {
-      const LeftIcon = () => <text testID="left-icon">🔍</text>;
+      const { Text } = require('react-native');
+      const LeftIcon = () => <Text testID="left-icon">🔍</Text>;
       const { getByTestId } = render(<Input placeholder="Search" left={<LeftIcon />} />);
-      
+
       expect(getByTestId('left-icon')).toBeTruthy();
     });
 
     it('renders right component correctly', () => {
-      const RightButton = () => <text testID="right-button">Clear</text>;
+      const { Text } = require('react-native');
+      const RightButton = () => <Text testID="right-button">Clear</Text>;
       const { getByTestId } = render(<Input placeholder="Input" right={<RightButton />} />);
-      
+
       expect(getByTestId('right-button')).toBeTruthy();
     });
 
     it('renders both left and right components', () => {
-      const LeftIcon = () => <text testID="left-icon">🔍</text>;
-      const RightButton = () => <text testID="right-button">Clear</text>;
+      const { Text } = require('react-native');
+      const LeftIcon = () => <Text testID="left-icon">🔍</Text>;
+      const RightButton = () => <Text testID="right-button">Clear</Text>;
       const { getByTestId } = render(
-        <Input 
-          placeholder="Search" 
-          left={<LeftIcon />} 
-          right={<RightButton />} 
-        />
+        <Input placeholder="Search" left={<LeftIcon />} right={<RightButton />} />
       );
-      
+
       expect(getByTestId('left-icon')).toBeTruthy();
       expect(getByTestId('right-button')).toBeTruthy();
     });
@@ -170,7 +168,7 @@ describe('Input', () => {
       const { UNSAFE_getByType } = render(
         <Input placeholder="Input" showClearButton value="some text" onChangeText={jest.fn()} />
       );
-      
+
       const { TouchableOpacity } = require('react-native');
       expect(UNSAFE_getByType(TouchableOpacity)).toBeTruthy();
     });
@@ -179,7 +177,7 @@ describe('Input', () => {
       const { UNSAFE_queryByType } = render(
         <Input placeholder="Input" showClearButton value="" onChangeText={jest.fn()} />
       );
-      
+
       // When there's no value, the clear button should not render at all
       const { TouchableOpacity } = require('react-native');
       expect(UNSAFE_queryByType(TouchableOpacity)).toBeNull();
@@ -187,9 +185,14 @@ describe('Input', () => {
 
     it('does not render clear button when showClearButton is false', () => {
       const { UNSAFE_queryByType } = render(
-        <Input placeholder="Input" showClearButton={false} value="some text" onChangeText={jest.fn()} />
+        <Input
+          placeholder="Input"
+          showClearButton={false}
+          value="some text"
+          onChangeText={jest.fn()}
+        />
       );
-      
+
       // Similar check - no clear button when disabled
       const { TouchableOpacity } = require('react-native');
       expect(UNSAFE_queryByType(TouchableOpacity)).toBeNull();
@@ -198,29 +201,30 @@ describe('Input', () => {
     it('calls onChangeText with empty string when clear button is pressed', () => {
       const mockOnChangeText = jest.fn();
       const { UNSAFE_getByType } = render(
-        <Input 
-          placeholder="Input" 
-          showClearButton 
-          value="some text" 
-          onChangeText={mockOnChangeText} 
+        <Input
+          placeholder="Input"
+          showClearButton
+          value="some text"
+          onChangeText={mockOnChangeText}
         />
       );
-      
+
       const { TouchableOpacity } = require('react-native');
       const clearButton = UNSAFE_getByType(TouchableOpacity);
       fireEvent.press(clearButton);
-      
+
       expect(mockOnChangeText).toHaveBeenCalledWith('');
     });
   });
 
   describe('combined features', () => {
     it('renders small variant with left icon and clear button', () => {
-      const LeftIcon = () => <text testID="left-icon">🔍</text>;
+      const { Text } = require('react-native');
+      const LeftIcon = () => <Text testID="left-icon">🔍</Text>;
       const mockOnChangeText = jest.fn();
       const { getByTestId, getByPlaceholderText, UNSAFE_getByType } = render(
-        <Input 
-          placeholder="Search" 
+        <Input
+          placeholder="Search"
           variant="small"
           left={<LeftIcon />}
           showClearButton
@@ -228,21 +232,22 @@ describe('Input', () => {
           onChangeText={mockOnChangeText}
         />
       );
-      
+
       expect(getByTestId('left-icon')).toBeTruthy();
-      
+
       const { TouchableOpacity } = require('react-native');
       expect(UNSAFE_getByType(TouchableOpacity)).toBeTruthy();
-      
+
       const input = getByPlaceholderText('Search');
       expect(input.props.className).toContain('text-md h-10');
     });
 
     it('works correctly with multiline and all features', () => {
-      const LeftIcon = () => <text testID="left-icon">📝</text>;
-      const RightButton = () => <text testID="right-button">Send</text>;
+      const { Text } = require('react-native');
+      const LeftIcon = () => <Text testID="left-icon">📝</Text>;
+      const RightButton = () => <Text testID="right-button">Send</Text>;
       const { getByTestId, getByPlaceholderText, UNSAFE_getByType } = render(
-        <Input 
+        <Input
           placeholder="Write message..."
           multiline
           left={<LeftIcon />}
@@ -252,13 +257,13 @@ describe('Input', () => {
           onChangeText={jest.fn()}
         />
       );
-      
+
       expect(getByTestId('left-icon')).toBeTruthy();
       expect(getByTestId('right-button')).toBeTruthy();
-      
+
       const { TouchableOpacity } = require('react-native');
       expect(UNSAFE_getByType(TouchableOpacity)).toBeTruthy();
-      
+
       const input = getByPlaceholderText('Write message...');
       expect(input.props.className).toContain('h-24 py-3 text-left');
     });
