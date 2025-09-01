@@ -8,6 +8,7 @@ import {
   deleteTask,
   toggleTaskCompletion,
 } from '@/queries/tasks';
+import { Task } from '@/types';
 
 export const useTasksByListId = (listId: number) => {
   return useQuery({
@@ -51,11 +52,11 @@ export const useCreateTask = (listId: number, onSuccess?: () => void) => {
         image: null,
       };
 
-      queryClient.setQueryData(['tasks', listId], (old: any) => {
+      queryClient.setQueryData(['tasks', listId], (old: Task[] | undefined) => {
         return [...(old || []), optimisticTask];
       });
 
-      queryClient.setQueryData(['tasks'], (old: any) => {
+      queryClient.setQueryData(['tasks'], (old: Task[] | undefined) => {
         return [...(old || []), optimisticTask];
       });
 
@@ -107,17 +108,17 @@ export const useUpdateTask = (listId: number) => {
       const previousTasksByList = queryClient.getQueryData(['tasks', listId]);
       const previousAllTasks = queryClient.getQueryData(['tasks']);
 
-      queryClient.setQueryData(['tasks', listId], (old: any) => {
+      queryClient.setQueryData(['tasks', listId], (old: Task[] | undefined) => {
         return (
-          old?.map((task: any) =>
+          old?.map((task) =>
             task.id === id ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
           ) || []
         );
       });
 
-      queryClient.setQueryData(['tasks'], (old: any) => {
+      queryClient.setQueryData(['tasks'], (old: Task[] | undefined) => {
         return (
-          old?.map((task: any) =>
+          old?.map((task) =>
             task.id === id ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
           ) || []
         );
@@ -149,12 +150,12 @@ export const useDeleteTask = (listId: number) => {
       const previousTasksByList = queryClient.getQueryData(['tasks', listId]);
       const previousAllTasks = queryClient.getQueryData(['tasks']);
 
-      queryClient.setQueryData(['tasks', listId], (old: any) => {
-        return old?.filter((task: any) => task.id !== taskId) || [];
+      queryClient.setQueryData(['tasks', listId], (old: Task[] | undefined) => {
+        return old?.filter((task) => task.id !== taskId) || [];
       });
 
-      queryClient.setQueryData(['tasks'], (old: any) => {
-        return old?.filter((task: any) => task.id !== taskId) || [];
+      queryClient.setQueryData(['tasks'], (old: Task[] | undefined) => {
+        return old?.filter((task) => task.id !== taskId) || [];
       });
 
       return { previousTasksByList, previousAllTasks };
@@ -184,9 +185,9 @@ export const useToggleTask = (listId: number) => {
       const previousTasksByList = queryClient.getQueryData(['tasks', listId]);
       const previousAllTasks = queryClient.getQueryData(['tasks']);
 
-      queryClient.setQueryData(['tasks', listId], (old: any) => {
+      queryClient.setQueryData(['tasks', listId], (old: Task[] | undefined) => {
         return (
-          old?.map((task: any) =>
+          old?.map((task) =>
             task.id === id
               ? { ...task, is_completed: isCompleted, updated_at: new Date().toISOString() }
               : task
@@ -194,9 +195,9 @@ export const useToggleTask = (listId: number) => {
         );
       });
 
-      queryClient.setQueryData(['tasks'], (old: any) => {
+      queryClient.setQueryData(['tasks'], (old: Task[] | undefined) => {
         return (
-          old?.map((task: any) =>
+          old?.map((task) =>
             task.id === id
               ? { ...task, is_completed: isCompleted, updated_at: new Date().toISOString() }
               : task

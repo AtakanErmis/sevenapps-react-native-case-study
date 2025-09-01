@@ -7,28 +7,24 @@ const mockLists: List[] = [
     name: 'Grocery Shopping',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z',
-    is_completed: false,
   },
   {
     id: 2,
     name: 'Work Tasks',
     created_at: '2023-01-02T00:00:00Z',
     updated_at: '2023-01-02T00:00:00Z',
-    is_completed: false,
   },
   {
     id: 3,
     name: 'Personal Projects',
     created_at: '2023-01-03T00:00:00Z',
     updated_at: '2023-01-03T00:00:00Z',
-    is_completed: true,
   },
   {
     id: 4,
     name: 'Home Improvement',
     created_at: '2023-01-04T00:00:00Z',
     updated_at: '2023-01-04T00:00:00Z',
-    is_completed: false,
   },
 ];
 

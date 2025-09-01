@@ -2,7 +2,7 @@ import { TouchableOpacity, View, Text } from 'react-native';
 
 import { SortSelector } from '@/components/ui/sort-selector';
 import { sortOptions } from '@/constants/filterConfig';
-import { useTaskFilters } from '@/lib/hooks/useTaskFilters';
+import { useTaskFilters, SortBy } from '@/lib/hooks/useTaskFilters';
 
 interface SortPanelProps {
   showSort: boolean;
@@ -27,7 +27,7 @@ export function SortPanel({ showSort }: SortPanelProps) {
         sortOptions={sortOptions}
         selectedSort={filters.sortBy}
         sortOrder={filters.sortOrder}
-        onSortChange={(sort) => filters.setSortBy(sort as any)}
+        onSortChange={(sort) => filters.setSortBy(sort as SortBy)}
         onOrderToggle={filters.toggleSortOrder}
         testID="sort-selector"
       />

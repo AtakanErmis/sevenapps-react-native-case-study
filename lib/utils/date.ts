@@ -1,4 +1,4 @@
-import { format, parseISO, isValid } from 'date-fns';
+import { format, parseISO, isValid, Locale } from 'date-fns';
 
 /**
  * Simple date formatter with i18n support
@@ -7,7 +7,7 @@ import { format, parseISO, isValid } from 'date-fns';
 export function formatDate(
   date: Date | string,
   formatStr: string = 'PP',
-  options?: { locale?: any }
+  options?: { locale?: Locale }
 ): string {
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
 

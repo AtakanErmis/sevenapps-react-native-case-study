@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 
 import { getAllLists, createList, deleteList, updateList, getListById } from '@/queries/lists';
 import { getAllTasks } from '@/queries/tasks';
+import { List, Task } from '@/types';
 
 export const useAllLists = () => {
   return useQuery({
@@ -39,7 +40,7 @@ export const useCreateList = () => {
       const previousLists = queryClient.getQueryData(['lists']);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(['lists'], (old: any) => {
+      queryClient.setQueryData(['lists'], (old: List[] | undefined) => {
         const optimisticList = {
           id: `temp_${Date.now()}`, // Use string temp ID to avoid collisions
           name,
@@ -81,12 +82,12 @@ export const useDeleteList = () => {
       const previousLists = queryClient.getQueryData(['lists']);
       const previousTasks = queryClient.getQueryData(['tasks']);
 
-      queryClient.setQueryData(['lists'], (old: any) => {
-        return old?.filter((list: any) => list.id !== listId) || [];
+      queryClient.setQueryData(['lists'], (old: List[] | undefined) => {
+        return old?.filter((list) => list.id !== listId) || [];
       });
 
-      queryClient.setQueryData(['tasks'], (old: any) => {
-        return old?.filter((task: any) => task.list_id !== listId) || [];
+      queryClient.setQueryData(['tasks'], (old: Task[] | undefined) => {
+        return old?.filter((task) => task.list_id !== listId) || [];
       });
 
       return { previousLists, previousTasks };
@@ -113,9 +114,9 @@ export const useRenameList = () => {
 
       const previousLists = queryClient.getQueryData(['lists']);
 
-      queryClient.setQueryData(['lists'], (old: any) => {
+      queryClient.setQueryData(['lists'], (old: List[] | undefined) => {
         return (
-          old?.map((list: any) =>
+          old?.map((list) =>
             list.id === id ? { ...list, name, updated_at: new Date().toISOString() } : list
           ) || []
         );
