@@ -12,11 +12,18 @@ import {
   RefreshControl,
 } from 'react-native';
 
+import { FilterControls } from '@/components/tasks/filter-controls';
+import { FiltersPanel } from '@/components/tasks/filters-panel';
+import { SortPanel } from '@/components/tasks/sort-panel';
 import { TaskCard } from '@/components/tasks/task-card';
 import { TaskCardSkeleton } from '@/components/tasks/task-card-skeleton';
 import { TaskModal } from '@/components/tasks/task-modal';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SwipeableListItem } from '@/components/ui/swipeable-item';
+import { useTaskFilters } from '@/lib/hooks/useTaskFilters';
+import { filterTasks } from '@/lib/utils/task-filters';
+import { sortTasks } from '@/lib/utils/task-sorting';
 import { useListById } from '@/queries/hooks/lists';
 import {
   useTasksByListId,
@@ -36,10 +43,52 @@ export default function TasksScreen() {
   const [editingTask, setEditingTask] = useState<Task | undefined>();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSort, setShowSort] = useState(false);
+
+  const filters = useTaskFilters();
+
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters((prev) => {
+      if (!prev) setShowSort(false); // Close sort when opening filters
+      return !prev;
+    });
+  }, []);
+
+  const handleToggleSort = useCallback(() => {
+    setShowSort((prev) => {
+      if (!prev) setShowFilters(false); // Close filters when opening sort
+      return !prev;
+    });
+  }, []);
+
   const listId = parseInt(listIdStr || '0', 10);
 
   const { data: list } = useListById(listId);
-  const { data: tasks, isLoading: tasksLoading, error: tasksError } = useTasksByListId(listId);
+  const {
+    data: listTasks,
+    isLoading: listTasksLoading,
+    error: listTasksError,
+  } = useTasksByListId(listId);
+
+  const tasks = useMemo(() => {
+    const filteredTasks = filterTasks(listTasks || [], {
+      searchTerm: filters.searchTerm,
+      priorityFilter: filters.priorityFilter,
+      statusFilter: filters.statusFilter,
+    });
+    return sortTasks(filteredTasks, filters.sortBy, filters.sortOrder);
+  }, [
+    listTasks,
+    filters.searchTerm,
+    filters.priorityFilter,
+    filters.statusFilter,
+    filters.sortBy,
+    filters.sortOrder,
+  ]);
+
+  const tasksLoading = listTasksLoading;
+  const tasksError = listTasksError;
 
   const handleTaskModalClose = useCallback(() => {
     setIsTaskModalVisible(false);
@@ -119,12 +168,6 @@ export default function TasksScreen() {
     setModalMode('create');
     setIsTaskModalVisible(true);
   }, []);
-
-  const { completedTasks, incompleteTasks } = useMemo(() => {
-    const completed = tasks?.filter((task) => task.is_completed) || [];
-    const incomplete = tasks?.filter((task) => !task.is_completed) || [];
-    return { completedTasks: completed, incompleteTasks: incomplete };
-  }, [tasks]);
 
   const renderItem = useCallback(
     (props: { item: Task }) => {
@@ -219,6 +262,26 @@ export default function TasksScreen() {
       />
 
       <View className={styles.content}>
+        <Input
+          left={<Feather name="search" size={20} />}
+          showClearButton
+          value={filters.searchTerm}
+          onChangeText={filters.setSearchTerm}
+          placeholder="Search tasks..."
+          className="mb-3"
+          variant="small"
+          testID="tasks-search"
+        />
+
+        <FilterControls
+          showFilters={showFilters}
+          showSort={showSort}
+          onToggleFilters={handleToggleFilters}
+          onToggleSort={handleToggleSort}
+        />
+        <FiltersPanel showFilters={showFilters} />
+        <SortPanel showSort={showSort} />
+
         {tasksLoading ? (
           <FlatList
             data={Array.from({ length: 5 })}
@@ -229,7 +292,7 @@ export default function TasksScreen() {
           />
         ) : (
           <FlatList
-            data={[...incompleteTasks, ...completedTasks]}
+            data={tasks}
             refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
             renderItem={renderItem}
             keyExtractor={(item) => item.id.toString()}
@@ -237,8 +300,16 @@ export default function TasksScreen() {
             contentContainerClassName={styles.listContent}
             ListEmptyComponent={
               <View className={styles.emptyContainer}>
-                <Text className={styles.emptyTitle}>No tasks yet</Text>
-                <Text className={styles.emptyDescription}>Add your first task to get started!</Text>
+                <Text className={styles.emptyTitle}>
+                  {filters.searchTerm.length > 0 || filters.hasActiveFilters
+                    ? 'No tasks found'
+                    : 'No tasks yet'}
+                </Text>
+                <Text className={styles.emptyDescription}>
+                  {filters.searchTerm.length > 0 || filters.hasActiveFilters
+                    ? 'Try adjusting your search or filters'
+                    : 'Add your first task to get started!'}
+                </Text>
               </View>
             }
           />

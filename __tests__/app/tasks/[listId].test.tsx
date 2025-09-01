@@ -231,6 +231,72 @@ jest.mock('@/components/ui/swipeable-item', () => {
 // Mock Feather icons
 jest.mock('@expo/vector-icons/Feather', () => 'Feather');
 
+// Mock filter components
+jest.mock('@/components/tasks/filter-controls', () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+  return {
+    FilterControls: ({ showFilters, showSort, onToggleFilters, onToggleSort }: any) => (
+      <View testID="filter-controls">
+        <TouchableOpacity testID="toggle-filters" onPress={onToggleFilters}>
+          <Text>Filters {showFilters ? '(open)' : '(closed)'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="toggle-sort" onPress={onToggleSort}>
+          <Text>Sort {showSort ? '(open)' : '(closed)'}</Text>
+        </TouchableOpacity>
+      </View>
+    ),
+  };
+});
+
+jest.mock('@/components/tasks/filters-panel', () => {
+  const { View, Text } = require('react-native');
+  return {
+    FiltersPanel: ({ showFilters }: any) => 
+      showFilters ? <View testID="filters-panel"><Text>Filter Options</Text></View> : null,
+  };
+});
+
+jest.mock('@/components/tasks/sort-panel', () => {
+  const { View, Text } = require('react-native');
+  return {
+    SortPanel: ({ showSort }: any) => 
+      showSort ? <View testID="sort-panel"><Text>Sort Options</Text></View> : null,
+  };
+});
+
+// Mock task filters hook
+jest.mock('@/lib/hooks/useTaskFilters', () => ({
+  useTaskFilters: () => ({
+    searchTerm: '',
+    priorityFilter: null,
+    statusFilter: null,
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    hasActiveFilters: false,
+    hasActiveSort: false,
+    setSearchTerm: jest.fn(),
+    setPriorityFilter: jest.fn(),
+    setStatusFilter: jest.fn(),
+    setSortBy: jest.fn(),
+    setSortOrder: jest.fn(),
+    toggleSortOrder: jest.fn(),
+    clearPriorityFilter: jest.fn(),
+    clearStatusFilter: jest.fn(),
+    clearAllFilters: jest.fn(),
+    resetSort: jest.fn(),
+    resetAll: jest.fn(),
+  }),
+}));
+
+// Mock filter and sort utilities
+jest.mock('@/lib/utils/task-filters', () => ({
+  filterTasks: jest.fn((tasks) => tasks),
+}));
+
+jest.mock('@/lib/utils/task-sorting', () => ({
+  sortTasks: jest.fn((tasks) => tasks),
+}));
+
 describe('TasksScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();

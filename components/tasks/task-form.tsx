@@ -73,7 +73,7 @@ export function TaskForm({ onSubmit, mode, task, isLoading = false }: TaskFormPr
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 gap-3">
       <form.Field name="name">
         {(field) => (
           <Input

@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { useQueryClient } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,8 +15,10 @@ import {
 import { ListCard } from '@/components/lists/list-card';
 import { ListCardSkeleton } from '@/components/lists/list-card-skeleton';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SwipeableListItem } from '@/components/ui/swipeable-item';
 import { TextInputModal } from '@/components/ui/text-input-modal';
+import { filterLists } from '@/lib/utils/list-filters';
 import { useAllLists, useCreateList, useDeleteList, useRenameList } from '@/queries/hooks/lists';
 import { isTempId } from '@/queries/utils';
 import { List } from '@/types';
@@ -24,7 +26,14 @@ import { List } from '@/types';
 export default function Home() {
   const queryClient = useQueryClient();
 
-  const { data: lists, isLoading: listsLoading, error: listsError } = useAllLists();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const { data: allLists, isLoading: listsLoading, error: listsError } = useAllLists();
+
+  // Filter lists client-side
+  const lists = useMemo(() => {
+    return filterLists(allLists || [], searchTerm);
+  }, [allLists, searchTerm]);
 
   const createListMutation = useCreateList();
   const deleteListMutation = useDeleteList();
@@ -188,6 +197,17 @@ export default function Home() {
       />
 
       <View className={styles.content}>
+        <Input
+          left={<Feather name="search" size={20} />}
+          showClearButton
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+          placeholder="Search lists..."
+          className="mb-4"
+          variant="small"
+          testID="lists-search"
+        />
+
         {listsLoading ? (
           <FlatList
             data={Array.from({ length: 5 })}
@@ -206,9 +226,13 @@ export default function Home() {
             contentContainerClassName={styles.listContent}
             ListEmptyComponent={
               <View className={styles.emptyContainer}>
-                <Text className={styles.emptyTitle}>No lists yet</Text>
+                <Text className={styles.emptyTitle}>
+                  {searchTerm.length > 0 ? 'No lists found' : 'No lists yet'}
+                </Text>
                 <Text className={styles.emptyDescription}>
-                  Create your first list to get started organizing your tasks!
+                  {searchTerm.length > 0
+                    ? `No lists match "${searchTerm}"`
+                    : 'Create your first list to get started organizing your tasks!'}
                 </Text>
               </View>
             }
