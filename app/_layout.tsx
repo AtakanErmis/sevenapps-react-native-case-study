@@ -27,6 +27,7 @@ export default function Layout() {
           <Stack>
             <Stack.Screen name="index" options={{ title: 'Task Manager' }} />
             <Stack.Screen name="tasks/[listId]" options={{ title: 'Tasks' }} />
+            <Stack.Screen name="(modal)/task" options={{ title: 'Task', presentation: 'modal' }} />
           </Stack>
         </DatabaseProvider>
       </QueryClientProvider>

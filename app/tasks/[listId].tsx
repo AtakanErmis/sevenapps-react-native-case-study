@@ -1,6 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
 import { useQueryClient } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -17,7 +17,6 @@ import { FiltersPanel } from '@/components/tasks/filters-panel';
 import { SortPanel } from '@/components/tasks/sort-panel';
 import { TaskCard } from '@/components/tasks/task-card';
 import { TaskCardSkeleton } from '@/components/tasks/task-card-skeleton';
-import { TaskModal } from '@/components/tasks/task-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SwipeableListItem } from '@/components/ui/swipeable-item';
@@ -28,7 +27,6 @@ import { useListById } from '@/queries/hooks/lists';
 import {
   useTasksByListId,
   useCreateTask,
-  useUpdateTask,
   useDeleteTask,
   useToggleTask,
 } from '@/queries/hooks/tasks';
@@ -37,10 +35,8 @@ import { Task } from '@/types';
 
 export default function TasksScreen() {
   const { listId: listIdStr } = useLocalSearchParams<{ listId: string }>();
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [editingTask, setEditingTask] = useState<Task | undefined>();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [showFilters, setShowFilters] = useState(false);
@@ -90,14 +86,7 @@ export default function TasksScreen() {
   const tasksLoading = listTasksLoading;
   const tasksError = listTasksError;
 
-  const handleTaskModalClose = useCallback(() => {
-    setIsTaskModalVisible(false);
-    setEditingTask(undefined);
-    setModalMode('create');
-  }, []);
-
-  const createTaskMutation = useCreateTask(listId, handleTaskModalClose);
-  const updateTaskMutation = useUpdateTask(listId);
+  const createTaskMutation = useCreateTask(listId);
   const deleteTaskMutation = useDeleteTask(listId);
   const toggleTaskMutation = useToggleTask(listId);
 
@@ -109,30 +98,6 @@ export default function TasksScreen() {
       setIsRefreshing(false);
     }
   }, [queryClient, listId]);
-
-  const handleTaskSubmit = useCallback(
-    (taskData: {
-      name: string;
-      description?: string;
-      priority: 'low' | 'medium' | 'high';
-      image?: string;
-      due_date?: string;
-    }) => {
-      if (modalMode === 'create') {
-        createTaskMutation.mutate({
-          ...taskData,
-          list_id: listId,
-        });
-      } else if (editingTask) {
-        updateTaskMutation.mutate({
-          id: editingTask.id,
-          updates: taskData,
-        });
-      }
-      handleTaskModalClose();
-    },
-    [modalMode, editingTask, listId, createTaskMutation, updateTaskMutation, handleTaskModalClose]
-  );
 
   const handleToggleTask = useCallback(
     (task: Task) => {
@@ -158,16 +123,22 @@ export default function TasksScreen() {
     [deleteTaskMutation]
   );
 
-  const handleEditTask = useCallback((task: Task) => {
-    setEditingTask(task);
-    setModalMode('edit');
-    setIsTaskModalVisible(true);
-  }, []);
+  const handleEditTask = useCallback(
+    (task: Task) => {
+      router.push({
+        pathname: '/(modal)/task',
+        params: { listId: listId.toString(), mode: 'edit', taskId: task.id.toString() },
+      });
+    },
+    [router, listId]
+  );
 
   const handleCreateTask = useCallback(() => {
-    setModalMode('create');
-    setIsTaskModalVisible(true);
-  }, []);
+    router.push({
+      pathname: '/(modal)/task',
+      params: { listId: listId.toString(), mode: 'create' },
+    });
+  }, [router, listId]);
 
   const renderItem = useCallback(
     (props: { item: Task }) => {
@@ -315,15 +286,6 @@ export default function TasksScreen() {
           />
         )}
       </View>
-
-      <TaskModal
-        visible={isTaskModalVisible}
-        onClose={handleTaskModalClose}
-        onSubmit={handleTaskSubmit}
-        mode={modalMode}
-        task={editingTask}
-        isLoading={createTaskMutation.isPending || updateTaskMutation.isPending}
-      />
     </View>
   );
 }

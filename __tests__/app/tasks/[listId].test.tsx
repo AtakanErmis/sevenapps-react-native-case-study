@@ -6,6 +6,9 @@ import TasksScreen from '@/app/tasks/[listId]';
 import { List, Task } from '@/types';
 
 // Mock expo-router
+const mockPush = jest.fn();
+const mockBack = jest.fn();
+
 jest.mock('expo-router', () => ({
   Stack: {
     Screen: ({ options }: any) => {
@@ -18,6 +21,10 @@ jest.mock('expo-router', () => ({
     },
   },
   useLocalSearchParams: () => ({ listId: '1' }),
+  useRouter: () => ({
+    push: mockPush,
+    back: mockBack,
+  }),
 }));
 
 // Mock React Native Alert
@@ -161,38 +168,7 @@ jest.mock('@/components/tasks/task-card-skeleton', () => {
   };
 });
 
-jest.mock('@/components/tasks/task-modal', () => {
-  const { View, Text, TouchableOpacity } = require('react-native');
-  return {
-    TaskModal: ({ visible, onClose, onSubmit, mode, task }: any) => (
-      <View
-        testID="task-modal"
-        accessibilityState={{ expanded: visible }}
-        data-visible={visible?.toString()}
-        data-mode={mode}>
-        <TouchableOpacity testID="modal-close" onPress={onClose}>
-          <Text>Close</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          testID="modal-submit"
-          onPress={() =>
-            onSubmit({
-              name: 'New Task',
-              priority: 'medium',
-              description: 'Test description',
-              image: task?.image || undefined,
-              due_date: task?.due_date || undefined,
-            })
-          }>
-          <Text>Submit</Text>
-        </TouchableOpacity>
-        {task && <Text testID="modal-task">{task.name}</Text>}
-        {task?.image && <Text testID="modal-image">Image: {task.image}</Text>}
-        {task?.due_date && <Text testID="modal-due-date">Due: {task.due_date}</Text>}
-      </View>
-    ),
-  };
-});
+// TaskModal is no longer used - converted to navigation screen
 
 jest.mock('@/components/ui/button', () => {
   const { TouchableOpacity, Text } = require('react-native');
@@ -308,6 +284,8 @@ jest.mock('@/lib/utils/task-sorting', () => ({
 describe('TasksScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPush.mockClear();
+    mockBack.mockClear();
     // Set up default mock returns
     mockUseTasksByListId.mockReturnValue({
       data: mockTasks,
@@ -346,46 +324,21 @@ describe('TasksScreen', () => {
     expect(getByTestId('add-task-button')).toBeTruthy();
   });
 
-  it('opens task modal when add button is pressed', () => {
+  it('navigates to task screen when add button is pressed', () => {
     const { getByTestId } = render(<TasksScreen />);
 
     const addButton = getByTestId('add-task-button');
     fireEvent.press(addButton);
 
-    const modal = getByTestId('task-modal');
-    expect(modal.props['data-visible']).toBe('true');
-    expect(modal.props['data-mode']).toBe('create');
-  });
-
-  it('closes task modal when close button is pressed', () => {
-    const { getByTestId } = render(<TasksScreen />);
-
-    // Open modal first
-    fireEvent.press(getByTestId('add-task-button'));
-    expect(getByTestId('task-modal').props['data-visible']).toBe('true');
-
-    // Close modal
-    fireEvent.press(getByTestId('modal-close'));
-    expect(getByTestId('task-modal').props['data-visible']).toBe('false');
-  });
-
-  it('handles task creation', async () => {
-    const { getByTestId } = render(<TasksScreen />);
-
-    fireEvent.press(getByTestId('add-task-button'));
-    fireEvent.press(getByTestId('modal-submit'));
-
-    await waitFor(() => {
-      expect(mockMutations.createTask.mutate).toHaveBeenCalledWith({
-        name: 'New Task',
-        priority: 'medium',
-        description: 'Test description',
-        image: undefined,
-        due_date: undefined,
-        list_id: 1,
-      });
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/(modal)/task',
+      params: { listId: '1', mode: 'create' },
     });
   });
+
+  // Modal closing is no longer relevant - task screen is handled by navigation
+
+  // Task creation is now handled in the separate task screen, not in this screen
 
   it('handles task toggle', () => {
     const { getByText } = render(<TasksScreen />);
@@ -400,16 +353,16 @@ describe('TasksScreen', () => {
   });
 
   it('handles task editing via left swipe action', () => {
-    const { getByTestId, getAllByTestId } = render(<TasksScreen />);
+    const { getAllByTestId } = render(<TasksScreen />);
 
     const editButtons = getAllByTestId('left-action-0');
     const firstEditButton = editButtons[0]; // Edit button for first task
     fireEvent.press(firstEditButton);
 
-    const modal = getByTestId('task-modal');
-    expect(modal.props['data-visible']).toBe('true');
-    expect(modal.props['data-mode']).toBe('edit');
-    expect(getByTestId('modal-task').children).toContain('Test Task 1');
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/(modal)/task',
+      params: { listId: '1', mode: 'edit', taskId: '1' },
+    });
   });
 
   it('handles task deletion via right swipe action', () => {
@@ -596,29 +549,7 @@ describe('TasksScreen', () => {
       expect(getByTestId('stack-screen')).toBeTruthy();
     });
 
-    it('handles task update in edit mode', async () => {
-      const { getByTestId, getAllByTestId } = render(<TasksScreen />);
-
-      // Open edit modal for the first task
-      const editButtons = getAllByTestId('left-action-0');
-      fireEvent.press(editButtons[0]); // First task (ID 1)
-
-      // Submit edit
-      fireEvent.press(getByTestId('modal-submit'));
-
-      await waitFor(() => {
-        expect(mockMutations.updateTask.mutate).toHaveBeenCalledWith({
-          id: 1,
-          updates: {
-            name: 'New Task',
-            priority: 'medium',
-            description: 'Test description',
-            image: undefined,
-            due_date: undefined,
-          },
-        });
-      });
-    });
+    // Task update is now handled in the separate task screen, not in this screen
   });
 
   describe('Tasks with new fields', () => {
@@ -643,74 +574,28 @@ describe('TasksScreen', () => {
       expect(getByText('Task Due Tomorrow')).toBeTruthy();
     });
 
-    it('passes image and due date to edit modal', () => {
+    it('navigates to edit screen for task with image and due date', () => {
       mockUseTasksByListId.mockReturnValue({
         data: mockTasksWithImageAndDate,
         isLoading: false,
         error: null,
       });
 
-      const { getByTestId, getAllByTestId } = render(<TasksScreen />);
+      const { getAllByTestId } = render(<TasksScreen />);
 
       // Open edit modal for task with image
       const editButtons = getAllByTestId('left-action-0');
       fireEvent.press(editButtons[0]); // First task with image
 
-      const modal = getByTestId('task-modal');
-      expect(modal.props['data-visible']).toBe('true');
-      expect(modal.props['data-mode']).toBe('edit');
-      expect(getByTestId('modal-task')).toHaveTextContent('Task with Image');
-      expect(getByTestId('modal-image')).toHaveTextContent('Image: file://test-image.jpg');
-      expect(getByTestId('modal-due-date')).toHaveTextContent('Due: 2024-12-31');
-    });
-
-    it('handles task creation with new fields', async () => {
-      const { getByTestId } = render(<TasksScreen />);
-
-      fireEvent.press(getByTestId('add-task-button'));
-      fireEvent.press(getByTestId('modal-submit'));
-
-      await waitFor(() => {
-        expect(mockMutations.createTask.mutate).toHaveBeenCalledWith({
-          name: 'New Task',
-          priority: 'medium',
-          description: 'Test description',
-          image: undefined,
-          due_date: undefined,
-          list_id: 1,
-        });
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/(modal)/task',
+        params: { listId: '1', mode: 'edit', taskId: '3' },
       });
     });
 
-    it('handles task update with new fields', async () => {
-      mockUseTasksByListId.mockReturnValue({
-        data: mockTasksWithImageAndDate,
-        isLoading: false,
-        error: null,
-      });
+    // Task creation is now handled in the separate task screen, not in this screen
 
-      const { getByTestId, getAllByTestId } = render(<TasksScreen />);
-
-      // Open edit modal for task with image and due date
-      const editButtons = getAllByTestId('left-action-0');
-      fireEvent.press(editButtons[0]); // Task with image
-
-      // Submit edit
-      fireEvent.press(getByTestId('modal-submit'));
-
-      await waitFor(() => {
-        expect(mockMutations.updateTask.mutate).toHaveBeenCalledWith({
-          id: 3,
-          updates: {
-            name: 'New Task',
-            priority: 'medium',
-            description: 'Test description',
-            image: 'file://test-image.jpg',
-            due_date: '2024-12-31',
-          },
-        });
-      });
-    });
+    // Task update is now handled in the separate task screen, not in this screen
 
     it('handles optimistic task with new fields', () => {
       const tempTaskWithFields: Task = {
