@@ -61,6 +61,9 @@ yarn install
 # or
 pnpm install
 
+# Prebuild the app
+npm run prebuild
+
 # Generate the database schema (IMPORTANT: do this before starting development)
 npm run generate-schema
 
@@ -70,8 +73,9 @@ Follow the Expo CLI instructions to run the app on your preferred platform (iOS,
 
 ## Important Note
 
-**Before starting development, you MUST run the database schema generation command** to set up the SQLite database structure:
+**Before starting development, you MUST run the database schema generation command and prebuild the app** to set up the SQLite database structure and Expo Development Client properly:
 
 ```bash
 npm run generate-schema
+npm run prebuild
 ```
